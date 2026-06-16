@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      /* ── Brand display font (Outfit) — embedded locally for fidelity ── */
+      @font-face {
+        font-family: "Outfit";
+        font-style: normal;
+        font-weight: 800;
+        font-display: block;
+        src: url(fonts/outfit-latin.woff2) format("woff2");
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+          U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+          U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: "Outfit";
+        font-style: normal;
+        font-weight: 900;
+        font-display: block;
+        src: url(fonts/outfit-latin.woff2) format("woff2");
+        unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+          U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+          U+2212, U+2215, U+FEFF, U+FFFD;
+      }
+      @font-face {
+        font-family: "Outfit";
+        font-style: normal;
+        font-weight: 800;
+        font-display: block;
+        src: url(fonts/outfit-latinext.woff2) format("woff2");
+        unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+          U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+          U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+      }
+      @font-face {
+        font-family: "Outfit";
+        font-style: normal;
+        font-weight: 900;
+        font-display: block;
+        src: url(fonts/outfit-latinext.woff2) format("woff2");
+        unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+          U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+          U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #05050d;
+        font-family: "Inter", system-ui, sans-serif;
+      }
+
+      /* ── BRAND TOKENS (atoms — verbatim from design.md) ─────────────── */
+      #root {
+        --brand-purple: #7c3aed;
+        --brand-purple-light: #a855f7;
+        --brand-purple-dark: #5b21b6;
+        --brand-purple-glow: rgba(124, 58, 237, 0.35);
+        --brand-purple-subtle: rgba(124, 58, 237, 0.08);
+
+        --bg-base: #05050d;
+        --bg-surface: #0d0d1a;
+        --bg-elevated: #12122a;
+        --bg-card: rgba(18, 18, 42, 0.7);
+
+        --text-primary: #f0f0ff;
+        --text-secondary: #a0a0c0;
+        --text-muted: #6e6e95;
+        --text-code: #c4b5fd;
+
+        --border-subtle: rgba(124, 58, 237, 0.18);
+        --border-strong: rgba(124, 58, 237, 0.4);
+
+        --success: #14d39a;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+
+        --rounded-pill: 999px;
+        --rounded-card: 16px;
+        --rounded-card-lg: 24px;
+        --rounded-chip: 8px;
+        --hairline: 2px;
+
+        --font-display: "Outfit", system-ui, sans-serif;
+        --font-body: "Inter", system-ui, sans-serif;
+        --font-mono: "JetBrains Mono", ui-monospace, monospace;
+      }
+
+      /* ── SCENE ENGINE ──────────────────────────────────────────────── */
+      .scene {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+        container-type: size;
+        overflow: hidden;
+        will-change: opacity, transform, filter;
+      }
+      .scene--hidden {
+        opacity: 0;
+      }
+
+      /* ── GROUNDS ───────────────────────────────────────────────────── */
+      .ground-base {
+        background: var(--bg-base);
+      }
+      .ground-surface {
+        background: var(--bg-surface);
+      }
+      .ground-dot-grid {
+        background:
+          radial-gradient(circle, var(--border-subtle) 1px, transparent 1.5px) 0 0 /
+            2.4cqw 2.4cqw,
+          var(--bg-base);
+      }
+      /* a soft, brand-legal radial breath behind flat grounds (depth, not a 2nd voltage) */
+      .vignette::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          120% 90% at 50% 42%,
+          rgba(124, 58, 237, 0.1) 0%,
+          rgba(124, 58, 237, 0) 55%
+        );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ── TYPOGRAPHY (display/hero ramp in cqw) ──────────────────────── */
+      .t-wordmark {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 900;
+        font-size: 15cqw;
+        line-height: 0.84;
+        letter-spacing: -0.055em;
+        color: var(--text-primary);
+      }
+      .t-hero {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 900;
+        font-size: 11cqw;
+        line-height: 0.88;
+        letter-spacing: -0.04em;
+        color: var(--text-primary);
+      }
+      .t-step3 {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 6.2cqw;
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+      }
+      .t-stat {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 900;
+        font-size: 20cqw;
+        line-height: 1;
+        letter-spacing: -0.05em;
+        color: var(--text-primary);
+        font-variant-numeric: tabular-nums;
+      }
+      .t-eyebrow {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.5cqw;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+      }
+      .t-body {
+        font-family: "Inter", system-ui, sans-serif;
+        font-weight: 400;
+        font-size: 1.75cqw;
+        line-height: 1.5;
+        color: var(--text-secondary);
+      }
+      .grad {
+        background: linear-gradient(
+          120deg,
+          var(--brand-purple-light) 0%,
+          var(--brand-purple) 58%,
+          var(--brand-purple-dark) 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+      }
+
+      /* ── COMPONENTS ────────────────────────────────────────────────── */
+      .pulse-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.9cqw;
+        background: var(--brand-purple-subtle);
+        border: var(--hairline) solid var(--border-strong);
+        color: var(--text-primary);
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.45cqw;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        border-radius: var(--rounded-pill);
+        padding: 0.85cqw 2.1cqw;
+        white-space: nowrap;
+      }
+      .pulse-badge .dot,
+      .pulse-badge-giant .dot {
+        position: relative;
+        display: block;
+        width: 1.05cqw;
+        height: 1.05cqw;
+        border-radius: 50%;
+        background: var(--brand-purple-light);
+        box-shadow: 0 0 1.4cqw var(--brand-purple-light);
+      }
+      .pulse-badge-giant {
+        display: inline-flex;
+        align-items: center;
+        gap: 1.2cqw;
+        background: var(--brand-purple-subtle);
+        border: var(--hairline) solid var(--border-strong);
+        color: var(--text-primary);
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.9cqw;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        border-radius: var(--rounded-pill);
+        padding: 1.3cqw 2.9cqw;
+        white-space: nowrap;
+      }
+      .pulse-badge-giant .dot {
+        width: 1.4cqw;
+        height: 1.4cqw;
+        box-shadow: 0 0 2cqw var(--brand-purple-light);
+      }
+
+      .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(
+          135deg,
+          var(--brand-purple-light) 0%,
+          var(--brand-purple) 55%,
+          var(--brand-purple-dark) 100%
+        );
+        color: #fff;
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.35cqw;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        border-radius: var(--rounded-pill);
+        padding: 1.05cqw 2.5cqw;
+        white-space: nowrap;
+        box-shadow: 0 0 5cqw var(--brand-purple-glow);
+        border: none;
+      }
+      .btn-primary-giant {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(
+          135deg,
+          var(--brand-purple-light) 0%,
+          var(--brand-purple) 55%,
+          var(--brand-purple-dark) 100%
+        );
+        color: #fff;
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 900;
+        font-size: 2cqw;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        border-radius: var(--rounded-pill);
+        padding: 1.6cqw 4cqw;
+        white-space: nowrap;
+        box-shadow: 0 0 7cqw var(--brand-purple-glow);
+        border: none;
+      }
+      .btn-ghost {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: var(--text-primary);
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.35cqw;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        border-radius: var(--rounded-pill);
+        padding: 1.05cqw 2.5cqw;
+        white-space: nowrap;
+        border: var(--hairline) solid var(--border-strong);
+      }
+
+      .card-glass {
+        background: var(--bg-card);
+        border: var(--hairline) solid var(--border-subtle);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        border-radius: var(--rounded-card-lg);
+        padding: 3cqw 3.2cqw;
+        box-shadow:
+          inset 0 0 0 1px var(--border-subtle),
+          0 1.4cqw 4cqw rgba(0, 0, 0, 0.55);
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.7cqw;
+        border-radius: var(--rounded-pill);
+        padding: 0.65cqw 1.5cqw;
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.3cqw;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        border: var(--hairline) solid currentColor;
+      }
+      .status-pill .dot {
+        display: block;
+        width: 0.8cqw;
+        height: 0.8cqw;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .pill-success {
+        background: rgba(20, 211, 154, 0.12);
+        color: var(--success);
+      }
+      .pill-pending {
+        background: rgba(245, 158, 11, 0.12);
+        color: var(--warning);
+      }
+
+      .hash-block {
+        background: var(--bg-surface);
+        border: var(--hairline) solid var(--border-subtle);
+        color: var(--text-code);
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-weight: 500;
+        font-size: 2.1cqw;
+        letter-spacing: 0.01em;
+        line-height: 1.2;
+        border-radius: var(--rounded-chip);
+        padding: 1.7cqw 2.4cqw;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+
+      .catalog-tile {
+        position: relative;
+        flex: 1;
+        background: var(--bg-surface);
+        border: var(--hairline) solid var(--border-subtle);
+        color: var(--text-primary);
+        border-radius: var(--rounded-card-lg);
+        padding: 3cqw 2.6cqw;
+        display: flex;
+        flex-direction: column;
+        gap: 1.4cqw;
+      }
+      .catalog-tile .tile-kicker {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.3cqw;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+      .catalog-tile h4 {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 4cqw;
+        line-height: 0.98;
+        letter-spacing: -0.02em;
+        color: var(--text-primary);
+      }
+      .catalog-tile p {
+        font-family: "Inter", system-ui, sans-serif;
+        font-weight: 400;
+        font-size: 1.55cqw;
+        line-height: 1.5;
+        color: var(--text-secondary);
+        max-width: 30cqw;
+      }
+      .catalog-tile .tile-meta {
+        margin-top: auto;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-weight: 500;
+        font-size: 1.3cqw;
+        letter-spacing: 0.02em;
+        color: var(--text-code);
+      }
+      .catalog-tile .tile-badge {
+        position: absolute;
+        top: 1.9cqw;
+        right: 1.9cqw;
+      }
+
+      .glow-ring {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 70cqw;
+        height: 70cqw;
+        transform: translate(-50%, -50%);
+        border-radius: 50%;
+        background: radial-gradient(
+          circle,
+          var(--brand-purple-glow) 0%,
+          rgba(124, 58, 237, 0.16) 34%,
+          rgba(124, 58, 237, 0) 64%
+        );
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ── LEDGER ────────────────────────────────────────────────────── */
+      .ledger-head,
+      .ledger-row {
+        display: grid;
+        grid-template-columns: 1fr 16cqw 10cqw 8cqw;
+        gap: 1.6cqw;
+        align-items: center;
+        padding: 1.15cqw 0.4cqw;
+      }
+      .ledger-head {
+        padding-bottom: 0.9cqw;
+        border-bottom: var(--hairline) solid var(--border-strong);
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.05cqw;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+      .ledger-row {
+        border-bottom: var(--hairline) solid var(--border-subtle);
+      }
+      .ledger-row:last-child {
+        border-bottom: none;
+      }
+      .lc-model {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.7cqw;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+        white-space: nowrap;
+      }
+      .lc-hash {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-weight: 500;
+        font-size: 1.5cqw;
+        letter-spacing: 0.01em;
+        color: var(--text-code);
+        white-space: nowrap;
+      }
+      .lc-amt {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.9cqw;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      .lc-state {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.2cqw;
+        letter-spacing: 0.16em;
+        text-align: right;
+      }
+      .ledger-cols {
+        text-align: right;
+      }
+      .st-ok {
+        color: var(--success);
+      }
+      .st-sync {
+        color: var(--warning);
+      }
+
+      /* ── PER-SCENE LAYOUTS ─────────────────────────────────────────── */
+      .lay-center {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 5cqw;
+        gap: 3cqw;
+        box-sizing: border-box;
+      }
+
+      /* S1 cover */
+      .cover-stack {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2.6cqw;
+      }
+      .cover-logo {
+        width: auto;
+        height: 11cqw;
+        display: block;
+        filter: drop-shadow(0 0 3cqw var(--brand-purple-glow));
+      }
+      .lockup {
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+      }
+
+      /* S2 claim — left anchored */
+      .lay-claim {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 6cqw 6cqw;
+        gap: 2.6cqw;
+        box-sizing: border-box;
+      }
+      .lay-claim .claim-headline {
+        position: relative;
+        z-index: 1;
+        max-width: 88cqw;
+      }
+      .claim-foot {
+        display: flex;
+        align-items: center;
+        gap: 1.4cqw;
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-weight: 500;
+        font-size: 1.4cqw;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+      }
+      .claim-foot .tick {
+        width: 4cqw;
+        height: var(--hairline);
+        background: var(--border-strong);
+        display: block;
+      }
+
+      /* S3 catalog */
+      .lay-catalog {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 5cqw;
+        gap: 2.6cqw;
+        box-sizing: border-box;
+      }
+      .catalog-head {
+        display: flex;
+        flex-direction: column;
+        gap: 1.2cqw;
+      }
+      .catalog-head h2 {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 5.4cqw;
+        line-height: 1;
+        letter-spacing: -0.025em;
+        color: var(--text-primary);
+      }
+      .catalog-head .rule {
+        height: var(--hairline);
+        background: var(--border-strong);
+        width: 100%;
+        transform-origin: left center;
+      }
+      .catalog-row {
+        display: flex;
+        gap: 3cqw;
+        flex: 1;
+      }
+
+      /* S4 composer */
+      .lay-composer {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 5cqw;
+        box-sizing: border-box;
+      }
+      .composer-card {
+        position: relative;
+        z-index: 1;
+        width: 64cqw;
+        display: flex;
+        flex-direction: column;
+        gap: 1.8cqw;
+      }
+      .composer-card .head {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 4.6cqw;
+        line-height: 1;
+        letter-spacing: -0.025em;
+        color: var(--text-primary);
+      }
+      .composer-card .body {
+        font-family: "Inter", system-ui, sans-serif;
+        font-weight: 400;
+        font-size: 1.7cqw;
+        line-height: 1.5;
+        color: var(--text-secondary);
+        max-width: 46cqw;
+      }
+      .composer-card .actions {
+        display: flex;
+        gap: 1.4cqw;
+        margin-top: 0.8cqw;
+      }
+
+      /* S5 stat */
+      .stat-stack {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2.8cqw;
+      }
+      .stat-caption {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-weight: 500;
+        font-size: 1.7cqw;
+        letter-spacing: 0.04em;
+        color: var(--text-secondary);
+      }
+      .stat-caption .arrow {
+        color: var(--brand-purple-light);
+        font-weight: 700;
+      }
+
+      /* S6 ledger */
+      .lay-ledger {
+        display: grid;
+        grid-template-columns: 30cqw 1fr;
+        gap: 3.4cqw;
+        width: 100%;
+        height: 100%;
+        padding: 4cqw 4.2cqw;
+        box-sizing: border-box;
+        align-content: center;
+      }
+      .ledger-rail {
+        display: flex;
+        flex-direction: column;
+        gap: 1.3cqw;
+        align-self: center;
+      }
+      .ledger-rail h3 {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 5cqw;
+        line-height: 0.98;
+        letter-spacing: -0.025em;
+        color: var(--text-primary);
+      }
+      .ledger-rail .sublabel {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-weight: 500;
+        font-size: 1.35cqw;
+        letter-spacing: 0.04em;
+        color: var(--text-muted);
+      }
+      .ledger-rail .pill-wrap {
+        margin-top: 0.8cqw;
+      }
+      .ledger-table {
+        display: flex;
+        flex-direction: column;
+        align-self: center;
+      }
+
+      /* S7 closer */
+      .closer-stack {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2.2cqw;
+        width: 100%;
+      }
+      .closer-stack .hash-block {
+        width: 72cqw;
+        text-align: center;
+      }
+      .closer-caption {
+        font-family: "Inter", system-ui, sans-serif;
+        font-weight: 400;
+        font-size: 1.6cqw;
+        letter-spacing: 0.02em;
+        color: var(--text-secondary);
+      }
+
+      /* S8 signoff */
+      .signoff-stack {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2.4cqw;
+      }
+      .signoff-lockup {
+        display: flex;
+        align-items: center;
+        gap: 2cqw;
+      }
+      .signoff-lockup img {
+        height: 7.5cqw;
+        width: auto;
+        filter: drop-shadow(0 0 2.4cqw var(--brand-purple-glow));
+      }
+      .signoff-lockup .word {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 900;
+        font-size: 8cqw;
+        line-height: 0.84;
+        letter-spacing: -0.05em;
+        color: var(--text-primary);
+      }
+      .signoff-tag {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 2.6cqw;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+        text-align: center;
+      }
+      .signoff-credit {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-weight: 500;
+        font-size: 1.4cqw;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div data-hf-id="hf-lvss" id="root" data-composition-id="main" data-start="0" data-duration="33.6" data-width="1920" data-height="1080">
+      <!-- ── S1 · COVER LOCKUP ──────────────────────────────────────── -->
+      <div data-hf-id="hf-xb7a" id="s1" class="scene ground-dot-grid">
+        <div data-hf-id="hf-5pp8" class="lay-center">
+          <div data-hf-id="hf-xmda" id="s1-glow" class="glow-ring"></div>
+          <div data-hf-id="hf-156u" class="cover-stack">
+            <img data-hf-id="hf-9z8m" id="s1-logo" class="cover-logo" src="assets/logo.png" alt="MOLFI logo">
+            <div data-hf-id="hf-dlt7" id="s1-lockup" class="lockup">
+              <span data-hf-id="hf-kprc" class="t-wordmark">MOLFI</span><span data-hf-id="hf-b8y6" class="t-wordmark grad">.FUN</span>
+            </div>
+            <div data-hf-id="hf-xr0d" id="s1-badge" class="pulse-badge-giant">
+              <span data-hf-id="hf-jkr6" id="s1-dot" class="dot"></span><span data-hf-id="hf-2dqr">AVALANCHE&#160;FUJI&#160;·&#160;x402</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── S2 · OVERSIZED CLAIM ───────────────────────────────────── -->
+      <div data-hf-id="hf-hc8q" id="s2" class="scene ground-base vignette scene--hidden">
+        <div data-hf-id="hf-eupx" class="lay-claim">
+          <div data-hf-id="hf-kbcm" id="s2-eyebrow" class="pulse-badge">
+            <span data-hf-id="hf-9gry" class="dot"></span><span data-hf-id="hf-nx6n">x402&#160;·&#160;EIP-3009&#160;·&#160;USDC</span>
+          </div>
+          <div data-hf-id="hf-dp40" id="s2-headline" class="claim-headline t-hero">
+            PAY <span data-hf-id="hf-r140" class="grad">PER</span> PROMPT
+          </div>
+          <div data-hf-id="hf-2ckp" id="s2-foot" class="claim-foot">
+            <span data-hf-id="hf-coyi" class="tick"></span><span data-hf-id="hf-cm2o">The agentic payments rail on Avalanche&#160;Fuji</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── S3 · TWO-UP CATALOG ────────────────────────────────────── -->
+      <div data-hf-id="hf-a8hb" id="s3" class="scene ground-base scene--hidden">
+        <div data-hf-id="hf-0o6g" class="lay-catalog">
+          <div data-hf-id="hf-aqc8" class="catalog-head">
+            <h2 data-hf-id="hf-qmdm" id="s3-title">Attention <span data-hf-id="hf-0nrc" class="grad">or</span> Agent.</h2>
+            <div data-hf-id="hf-qkwl" id="s3-rule" class="rule"></div>
+          </div>
+          <div data-hf-id="hf-8oq6" class="catalog-row">
+            <div data-hf-id="hf-xuy0" id="s3-tileA" class="catalog-tile">
+              <div data-hf-id="hf-1hu7" class="tile-badge pulse-badge">
+                <span data-hf-id="hf-zcc2" class="dot"></span><span data-hf-id="hf-dvo8">Recommended</span>
+              </div>
+              <div data-hf-id="hf-allx" class="tile-kicker">Agent Rail</div>
+              <h4 data-hf-id="hf-7aty">Agents pay in <span data-hf-id="hf-9rhk" class="grad">USDC</span>.</h4>
+              <p data-hf-id="hf-oju8">Programmatic stablecoin settlement signed with EIP-3009. Built for autonomous spenders.</p>
+              <div data-hf-id="hf-f3pp" class="tile-meta">x402&#160;·&#160;per-call</div>
+            </div>
+            <div data-hf-id="hf-6itv" id="s3-tileB" class="catalog-tile">
+              <div data-hf-id="hf-tkrd" class="tile-kicker">Human Rail</div>
+              <h4 data-hf-id="hf-w4uo">Humans pay in attention.</h4>
+              <p data-hf-id="hf-z695">Watch a sponsor ad, earn signed JWT credits, keep chatting. No wallet required.</p>
+              <div data-hf-id="hf-xgmy" class="tile-meta">ad&#160;playback&#160;·&#160;credit</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── S4 · GLASS COMPOSER ────────────────────────────────────── -->
+      <div data-hf-id="hf-7bqh" id="s4" class="scene ground-dot-grid scene--hidden">
+        <div data-hf-id="hf-6hn5" class="lay-composer">
+          <div data-hf-id="hf-12ww" id="s4-card" class="composer-card card-glass">
+            <div data-hf-id="hf-wxgg" id="s4-badge" class="pulse-badge">
+              <span data-hf-id="hf-zqn3" class="dot"></span><span data-hf-id="hf-0f6d">Composer&#160;Window</span>
+            </div>
+            <div data-hf-id="hf-eqlp" id="s4-head" class="head">Watch an ad to keep chatting.</div>
+            <div data-hf-id="hf-mfo3" id="s4-body" class="body">
+              Or top up USDC — settled on Avalanche&#160;Fuji in a single signature.
+            </div>
+            <div data-hf-id="hf-ks1k" id="s4-actions" class="actions">
+              <div data-hf-id="hf-g8zp" class="btn-primary">Watch ad</div>
+              <div data-hf-id="hf-vdp2" class="btn-ghost">Top up</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── S5 · GLOW STAT (402) ───────────────────────────────────── -->
+      <div data-hf-id="hf-ey95" id="s5" class="scene ground-base scene--hidden">
+        <div data-hf-id="hf-63x0" class="lay-center">
+          <div data-hf-id="hf-zqgy" id="s5-glow" class="glow-ring"></div>
+          <div data-hf-id="hf-lwm5" class="stat-stack">
+            <div data-hf-id="hf-xckt" id="s5-eyebrow" class="t-eyebrow">HTTP&#160;·&#160;x402&#160;protocol</div>
+            <div data-hf-id="hf-dyia" id="s5-stat" class="t-stat">402</div>
+            <div data-hf-id="hf-e0uv" id="s5-caption" class="stat-caption">
+              Payment&#160;Required&#160;<span data-hf-id="hf-v68i" class="arrow">→</span>&#160;settled&#160;on&#160;Fuji
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── S6 · AVALANCHE FUJI LEDGER ─────────────────────────────── -->
+      <div data-hf-id="hf-yofs" id="s6" class="scene ground-surface scene--hidden">
+        <div data-hf-id="hf-qsi4" class="lay-ledger">
+          <div data-hf-id="hf-ggac" class="ledger-rail">
+            <div data-hf-id="hf-pm9j" id="s6-eyebrow" class="t-eyebrow" style="color: var(--brand-purple-light)">
+              Public&#160;Verification
+            </div>
+            <h3 data-hf-id="hf-t4wt" id="s6-title">Avalanche<br data-hf-id="hf-x5px">Fuji Ledger</h3>
+            <div data-hf-id="hf-mwev" id="s6-sub" class="sublabel">x402&#160;·&#160;EIP-3009&#160;settlement</div>
+            <div data-hf-id="hf-15uh" id="s6-pill" class="pill-wrap">
+              <span data-hf-id="hf-z628" class="status-pill pill-success"><span data-hf-id="hf-04y4" class="dot"></span>On&#160;chain</span>
+            </div>
+          </div>
+          <div data-hf-id="hf-l8ow" class="ledger-table">
+            <div data-hf-id="hf-61p0" id="s6-colhead" class="ledger-head">
+              <span data-hf-id="hf-w01i">Model</span><span data-hf-id="hf-w6xr">Tx&#160;hash</span><span data-hf-id="hf-h32n" class="ledger-cols">USDC</span><span data-hf-id="hf-upo3" class="ledger-cols">State</span>
+            </div>
+            <div data-hf-id="hf-k3kh" class="ledger-row s6-rowItem">
+              <span data-hf-id="hf-v1za" class="lc-model">Claude Sonnet 4.5</span>
+              <span data-hf-id="hf-hlit" class="lc-hash">0x9a4c…b3e7</span>
+              <span data-hf-id="hf-84ne" class="lc-amt">0.0100</span>
+              <span data-hf-id="hf-oifw" class="lc-state st-ok">OK</span>
+            </div>
+            <div data-hf-id="hf-qx6t" class="ledger-row s6-rowItem">
+              <span data-hf-id="hf-tgpi" class="lc-model">Llama&#160;3.3 70B</span>
+              <span data-hf-id="hf-6918" class="lc-hash">0x4a1f…7d22</span>
+              <span data-hf-id="hf-f5cc" class="lc-amt">0.0010</span>
+              <span data-hf-id="hf-3cd0" class="lc-state st-ok">OK</span>
+            </div>
+            <div data-hf-id="hf-s43w" class="ledger-row s6-rowItem">
+              <span data-hf-id="hf-6r4a" class="lc-model">Claude Sonnet 4.5</span>
+              <span data-hf-id="hf-ri26" class="lc-hash">0x91c8…ee04</span>
+              <span data-hf-id="hf-8hu6" class="lc-amt">0.0100</span>
+              <span data-hf-id="hf-25fx" class="lc-state st-ok">OK</span>
+            </div>
+            <div data-hf-id="hf-rpsv" class="ledger-row s6-rowItem">
+              <span data-hf-id="hf-pepm" class="lc-model">Llama&#160;3.3 70B</span>
+              <span data-hf-id="hf-5a3z" class="lc-hash">0x77e0…1149</span>
+              <span data-hf-id="hf-m95w" class="lc-amt">0.0010</span>
+              <span data-hf-id="hf-wdai" class="lc-state st-sync">SYNC</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── S7 · HASH BLOCK CLOSER ─────────────────────────────────── -->
+      <div data-hf-id="hf-8ocv" id="s7" class="scene ground-base vignette scene--hidden">
+        <div data-hf-id="hf-4wzx" class="lay-center">
+          <div data-hf-id="hf-6mad" class="closer-stack">
+            <span data-hf-id="hf-ym86" id="s7-pill" class="status-pill pill-success"><span data-hf-id="hf-0j95" class="dot"></span>Settled&#160;on&#160;Fuji</span>
+            <div data-hf-id="hf-zfbd" id="s7-hash" class="hash-block">
+              0x635ee3EE…8460AeBE&#160;&#160;·&#160;&#160;USDC&#160;&#160;·&#160;&#160;EIP-3009
+            </div>
+            <div data-hf-id="hf-2ogw" id="s7-cap" class="closer-caption">
+              The operator settles on-chain. The agent pays only USDC.
+            </div>
+            <div data-hf-id="hf-zrsy" id="s7-cta" class="btn-primary-giant">Verify on Fuji</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── S8 · BRAND SIGN-OFF ────────────────────────────────────── -->
+      <div data-hf-id="hf-jxqd" id="s8" class="scene ground-dot-grid scene--hidden">
+        <div data-hf-id="hf-5bay" class="lay-center">
+          <div data-hf-id="hf-k559" id="s8-glow" class="glow-ring"></div>
+          <div data-hf-id="hf-b4n5" class="signoff-stack">
+            <div data-hf-id="hf-w1n1" id="s8-lockup" class="signoff-lockup">
+              <img data-hf-id="hf-6c22" src="assets/logo.png" alt="MOLFI logo">
+              <span data-hf-id="hf-e5cu" class="word">MOLFI<span data-hf-id="hf-o4ye" class="grad">.FUN</span></span>
+            </div>
+            <div data-hf-id="hf-agcp" id="s8-tag" class="signoff-tag">
+              Pay with attention. <span data-hf-id="hf-v9a0" class="grad">Or with agents.</span>
+            </div>
+            <div data-hf-id="hf-0rqw" id="s8-credit" class="signoff-credit">
+              Avalanche&#160;India&#160;Speedrun&#160;·&#160;Agentic&#160;Payments
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      /* ── Transition helper: brand-legal blur crossfade between dark grounds ── */
+      const DT = 0.6;
+      function fadeIn(sel, t) {
+        tl.fromTo(
+          sel,
+          { opacity: 0, filter: "blur(16px)", scale: 0.99 },
+          { opacity: 1, filter: "blur(0px)", scale: 1, duration: DT, ease: "power2.out" },
+          t
+        );
+      }
+      function fadeOut(sel, t) {
+        tl.to(
+          sel,
+          { opacity: 0, filter: "blur(16px)", scale: 1.018, duration: DT, ease: "power2.inOut" },
+          t
+        );
+        tl.set(sel, { opacity: 0 }, t + DT); // deterministic kill for non-linear seek
+      }
+
+      /* scene cut points */
+      const T1 = 3.8,
+        T2 = 7.2,
+        T3 = 12.4,
+        T4 = 16.4,
+        T5 = 20.4,
+        T6 = 26.2,
+        T7 = 30.2,
+        END = 33.6;
+
+      /* ════ S1 · COVER (0 → T1) ════ */
+      tl.fromTo("#s1-logo", { opacity: 0, y: -34, filter: "blur(10px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.95, ease: "expo.out" }, 0.2);
+      tl.fromTo("#s1-lockup", { opacity: 0, clipPath: "inset(0 100% 0 0)" },
+        { opacity: 1, clipPath: "inset(0 0% 0 0)", duration: 1.0, ease: "power4.out" }, 0.45);
+      tl.fromTo("#s1-badge", { opacity: 0, y: 26 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 1.15);
+      // ambient: halo breath + badge dot pulse (brand-allowed)
+      tl.fromTo("#s1-glow", { opacity: 0.35, scale: 0.92 },
+        { opacity: 0.85, scale: 1.05, duration: 1.5, yoyo: true, repeat: 1, ease: "sine.inOut" }, 0.3);
+      tl.to("#s1-dot", { opacity: 0.35, scale: 1.35, duration: 0.7, yoyo: true, repeat: 3, ease: "sine.inOut" }, 1.4);
+      fadeOut("#s1", T1);
+
+      /* ════ S2 · CLAIM (T1 → T2) ════ */
+      fadeIn("#s2", T1);
+      tl.fromTo("#s2-eyebrow", { opacity: 0, x: -30 },
+        { opacity: 1, x: 0, duration: 0.55, ease: "power3.out" }, T1 + 0.2);
+      tl.fromTo("#s2-headline", { opacity: 0, y: 52 },
+        { opacity: 1, y: 0, duration: 0.8, ease: "expo.out" }, T1 + 0.32);
+      tl.fromTo("#s2-foot", { opacity: 0, x: -24 },
+        { opacity: 1, x: 0, duration: 0.55, ease: "power2.out" }, T1 + 0.62);
+      tl.fromTo("#s2-foot .tick", { scaleX: 0 },
+        { scaleX: 1, duration: 0.6, ease: "power2.inOut", transformOrigin: "left center" }, T1 + 0.7);
+      fadeOut("#s2", T2);
+
+      /* ════ S3 · CATALOG (T2 → T3) ════ */
+      fadeIn("#s3", T2);
+      tl.fromTo("#s3-title", { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, T2 + 0.2);
+      tl.fromTo("#s3-rule", { scaleX: 0 },
+        { scaleX: 1, duration: 0.7, ease: "power2.inOut", transformOrigin: "left center" }, T2 + 0.35);
+      tl.fromTo("#s3-tileA", { opacity: 0, y: 60 },
+        { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, T2 + 0.5);
+      tl.fromTo("#s3-tileB", { opacity: 0, y: 60 },
+        { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, T2 + 0.66);
+      tl.fromTo("#s3-tileA .tile-badge", { opacity: 0, scale: 0.8 },
+        { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, T2 + 1.05);
+      fadeOut("#s3", T3);
+
+      /* ════ S4 · COMPOSER (T3 → T4) ════ */
+      fadeIn("#s4", T3);
+      tl.fromTo("#s4-card", { opacity: 0, y: 50, filter: "blur(8px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: "power3.out" }, T3 + 0.18);
+      tl.fromTo("#s4-badge", { opacity: 0, x: -24 },
+        { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, T3 + 0.42);
+      tl.fromTo("#s4-head", { opacity: 0, y: 28 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, T3 + 0.54);
+      tl.fromTo("#s4-body", { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "sine.out" }, T3 + 0.7);
+      tl.fromTo("#s4-actions", { opacity: 0, y: 18 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "back.out(1.4)" }, T3 + 0.86);
+      fadeOut("#s4", T4);
+
+      /* ════ S5 · STAT 402 (T4 → T5) ════ */
+      fadeIn("#s5", T4);
+      tl.fromTo("#s5-eyebrow", { opacity: 0, y: -22 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, T4 + 0.2);
+      tl.fromTo("#s5-stat", { opacity: 0, y: 40 },
+        { opacity: 1, y: 0, duration: 0.85, ease: "expo.out" }, T4 + 0.3);
+      tl.fromTo("#s5-caption", { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, T4 + 0.62);
+      tl.fromTo("#s5-glow", { opacity: 0.4, scale: 0.94 },
+        { opacity: 0.9, scale: 1.06, duration: 1.4, yoyo: true, repeat: 1, ease: "sine.inOut" }, T4 + 0.3);
+      fadeOut("#s5", T5);
+
+      /* ════ S6 · LEDGER (T5 → T6) ════ */
+      fadeIn("#s6", T5);
+      tl.fromTo("#s6-eyebrow", { opacity: 0, x: -24 },
+        { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, T5 + 0.2);
+      tl.fromTo("#s6-title", { opacity: 0, x: -30 },
+        { opacity: 1, x: 0, duration: 0.65, ease: "power3.out" }, T5 + 0.3);
+      tl.fromTo("#s6-sub", { opacity: 0, x: -20 },
+        { opacity: 1, x: 0, duration: 0.5, ease: "sine.out" }, T5 + 0.46);
+      tl.fromTo("#s6-pill", { opacity: 0, scale: 0.85 },
+        { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.5)" }, T5 + 0.6);
+      tl.fromTo("#s6-colhead", { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, T5 + 0.5);
+      tl.fromTo(".s6-rowItem", { opacity: 0, x: 36 },
+        { opacity: 1, x: 0, duration: 0.5, ease: "power2.out", stagger: 0.12 }, T5 + 0.66);
+      // hash-column readout shimmer (brand: text-code), subtle
+      tl.fromTo("#s6 .lc-hash", { opacity: 0.45 },
+        { opacity: 1, duration: 0.4, ease: "none", stagger: 0.12 }, T5 + 0.8);
+      fadeOut("#s6", T6);
+
+      /* ════ S7 · CLOSER (T6 → T7) ════ */
+      fadeIn("#s7", T6);
+      tl.fromTo("#s7-pill", { opacity: 0, y: -22, scale: 0.9 },
+        { opacity: 1, y: 0, scale: 1, duration: 0.55, ease: "back.out(1.5)" }, T6 + 0.2);
+      tl.fromTo("#s7-hash", { opacity: 0, y: 30, filter: "blur(8px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.7, ease: "power3.out" }, T6 + 0.34);
+      tl.fromTo("#s7-cap", { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "sine.out" }, T6 + 0.6);
+      tl.fromTo("#s7-cta", { opacity: 0, y: 22 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "back.out(1.4)" }, T6 + 0.76);
+      fadeOut("#s7", T7);
+
+      /* ════ S8 · SIGN-OFF (T7 → END) ════ */
+      fadeIn("#s8", T7);
+      tl.fromTo("#s8-lockup", { opacity: 0, y: 30, filter: "blur(8px)" },
+        { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "expo.out" }, T7 + 0.2);
+      tl.fromTo("#s8-tag", { opacity: 0, y: 24 },
+        { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, T7 + 0.5);
+      tl.fromTo("#s8-credit", { opacity: 0, y: 18 },
+        { opacity: 1, y: 0, duration: 0.55, ease: "power2.out" }, T7 + 0.7);
+      tl.fromTo("#s8-glow", { opacity: 0.35, scale: 0.95 },
+        { opacity: 0.8, scale: 1.05, duration: 1.05, yoyo: true, repeat: 1, ease: "sine.inOut" }, T7 + 0.4);
+      // final resolve — gentle fade to ground (final scene only)
+      tl.to(".signoff-stack", { opacity: 0, y: -16, duration: 0.7, ease: "power2.in", overwrite: "auto" }, END - 0.7);
+      tl.to("#s8-glow", { opacity: 0, duration: 0.7, ease: "power2.in", overwrite: "auto" }, END - 0.7);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
